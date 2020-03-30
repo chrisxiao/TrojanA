@@ -12,11 +12,10 @@ import rumps
 
 CONFIG_TEMPLATE = '''\
 [Trojan]
-; 一般情况只需填写
-; remote_addr 和 password
+; 一般情况只需填写remote_addr 和 password
 
 ; 本地代理地址端口
-local_port=1080
+local_port=1081
 ; trojan服务器地址(域名)
 remote_addr=
 ; trojan服务器端口
@@ -26,6 +25,7 @@ password=
 ; 是否验证ssl证书
 ssl.verify=false
 ssl.verify_hostname=false
+ssl.cert=
 
 [App]
 ; 本地PAC服务端口
@@ -33,8 +33,8 @@ pac_port=1082
 '''
 
 APP_MENU = [
-    u"当前状态:启动",
-    u"❌关闭",
+    u"当前状态:关闭",
+    u"✅启动",
     None,
     u"PAC模式",
     u"全局模式",
@@ -92,7 +92,7 @@ def gen_trojan_plist():
         'WorkingDirectory': os.path.abspath("./trojan"),
         'StandardOutPath': os.path.join(home_dir, 'Library/Logs/trojana-client.log'),
         'Label': 'com.chrisxiao.trojana.trojan-client',
-        'ProgramArguments': ['./trojan', '-c', './my-config.json'],
+        'ProgramArguments': ['./trojan', '-c', os.path.join(CONFIG_DIR, 'config.json')],
         'KeepAlive': True,
         'StandardErrorPath': os.path.join(home_dir, 'Library/Logs/trojana-client.log')
     }
@@ -122,10 +122,6 @@ def init_config():
         fp.write(CONFIG_TEMPLATE)
         fp.close()
 
-    pac_file = os.path.join(pac_dir, "my-gfwlist.js") 
-    if not os.path.exists(pac_file):
-        os.system("cp ./pac/my-gfwlist.js %s" % pac_file)
-
 
 def load_config():
     """
@@ -135,6 +131,14 @@ def load_config():
     config.read(CONFIG_PATH)
     APP_CONFIG.update(dict(config.items("App")))
     TROJAN_CONFIG.update(dict(config.items("Trojan")))
+
+    pac_file = os.path.join(CONFIG_DIR, "pac", "gfwlist.js")
+    if not os.path.exists(pac_file):
+        render_pac("./pac/gfwlist.js.tpl", pac_file)
+
+    trojan_conf = os.path.join(os.path.join(CONFIG_DIR, "config.json"))
+    if not os.path.exists(trojan_conf):
+        render_trojan_conf("./trojan/config.json.tpl", trojan_conf)
 
 
 def flush_config(config_string):
@@ -150,6 +154,38 @@ def flush_config(config_string):
 
     file(CONFIG_PATH, "w").write(config_string)
     print "flush config ok"
+
+    render_pac("./pac/gfwlist.js.tpl", os.path.join(CONFIG_DIR, "pac", "gfwlist.js"))
+    render_trojan_conf("./trojan/config.json.tpl", os.path.join(CONFIG_DIR, "config.json"))
+    print "rewrite config file ok"
+
+
+def render_pac(tpl_file, dst_file):
+    """
+    根据配置信息生成pac文件
+    """
+    tpl = file(tpl_file).read()
+    tpl = tpl.replace("__PROXY_PORT__", TROJAN_CONFIG["local_port"])
+    # print tpl
+    file(dst_file, "w").write(tpl)
+
+
+def render_trojan_conf(tpl_file, dst_file):
+    """
+    根据配置信息生成trojan客户端配置文件
+    """
+
+    tpl = file(tpl_file).read()
+
+    tpl = tpl.replace("__LOCAL_PORT__", TROJAN_CONFIG["local_port"])
+    tpl = tpl.replace("__REMOTE_ADDR__", TROJAN_CONFIG["remote_addr"])
+    tpl = tpl.replace("__REMOTE_PORT__", TROJAN_CONFIG["remote_port"])
+    tpl = tpl.replace("__PASSWORD__", TROJAN_CONFIG["password"])
+    tpl = tpl.replace("__VERIFY__", TROJAN_CONFIG["ssl.verify"])
+    tpl = tpl.replace("__VERIFY_HOSTNAME__", TROJAN_CONFIG["ssl.verify_hostname"])
+    tpl = tpl.replace("__CERT__", TROJAN_CONFIG["ssl.cert"])
+    # print tpl
+    file(dst_file, "w").write(tpl)
 
 
 def pac_mode_on(pac_url):
@@ -244,7 +280,7 @@ class AwesomeStatusBarApp(rumps.App):
                                  cancel=u"取消",
                                  dimensions=(480, 320)
                                 )
-    pac_url = "http://127.0.0.1:%s/my-gfwlist.js"
+    pac_url = "http://127.0.0.1:%s/gfwlist.js"
 
     def initialize(self):
         """
@@ -255,16 +291,16 @@ class AwesomeStatusBarApp(rumps.App):
         self.global_item = self.menu[u"全局模式"]
         self.global_item.state = False
 
-        start_trojan()
+        # start_trojan()
         start_pac_server()
         self.pac_url = self.pac_url % APP_CONFIG["pac_port"]
-        pac_mode_on(self.pac_url)
+        # pac_mode_on(self.pac_url)
 
 
-    @rumps.clicked(u"❌关闭")
+    @rumps.clicked(u"✅启动")
     def onoff(self, sender):
         if not self.status_item:
-            self.status_item = self._menu[u"当前状态:启动"]
+            self.status_item = self._menu[u"当前状态:关闭"]
 
         self.status_item.title = u"当前状态:启动"
 
@@ -282,7 +318,7 @@ class AwesomeStatusBarApp(rumps.App):
                 pac_mode_on(self.pac_url)
             else:
                 pac_mode_off()
-                global_mode_on("127.0.0.1", 1081)
+                global_mode_on("127.0.0.1", TROJAN_CONFIG["local_port"])
 
 
         rumps.alert(self.status_item.title)
@@ -315,7 +351,7 @@ class AwesomeStatusBarApp(rumps.App):
         # 关闭pac模式
         pac_mode_off()
         # 打开全局模式
-        global_mode_on("127.0.0.1", 1081)
+        global_mode_on("127.0.0.1", TROJAN_CONFIG["local_port"])
 
 
     @rumps.clicked(u"更新PAC文件")
