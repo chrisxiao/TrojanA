@@ -39,7 +39,6 @@ APP_MENU = [
     u"PAC模式",
     u"全局模式",
     None,
-    u"更新PAC文件",
     u"⚙设置",
     None,
     u"退出",
@@ -352,11 +351,6 @@ class AwesomeStatusBarApp(rumps.App):
         pac_mode_off()
         # 打开全局模式
         global_mode_on("127.0.0.1", TROJAN_CONFIG["local_port"])
-
-
-    @rumps.clicked(u"更新PAC文件")
-    def update_pac(self, _):
-        rumps.alert("功能开发中")
 
 
     @rumps.clicked(u"退出")
