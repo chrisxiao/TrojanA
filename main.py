@@ -33,8 +33,8 @@ pac_port=1082
 '''
 
 APP_MENU = [
-    u"当前状态:启动",
-    u"❌关闭",
+    u"当前状态:关闭",
+    u"✅启动",
     None,
     u"PAC模式",
     u"全局模式",
@@ -132,7 +132,7 @@ def load_config():
     APP_CONFIG.update(dict(config.items("App")))
     TROJAN_CONFIG.update(dict(config.items("Trojan")))
 
-    pac_file = os.path.join(CONFIG_DIR, "gfwlist.js")
+    pac_file = os.path.join(CONFIG_DIR, "pac", "gfwlist.js")
     if not os.path.exists(pac_file):
         render_pac("./pac/gfwlist.js.tpl", pac_file)
 
@@ -155,7 +155,7 @@ def flush_config(config_string):
     file(CONFIG_PATH, "w").write(config_string)
     print "flush config ok"
 
-    render_pac("./pac/gfwlist.js.tpl", os.path.join(CONFIG_DIR, "gfwlist.js"))
+    render_pac("./pac/gfwlist.js.tpl", os.path.join(CONFIG_DIR, "pac", "gfwlist.js"))
     render_trojan_conf("./trojan/config.json.tpl", os.path.join(CONFIG_DIR, "config.json"))
     print "rewrite config file ok"
 
@@ -291,16 +291,16 @@ class AwesomeStatusBarApp(rumps.App):
         self.global_item = self.menu[u"全局模式"]
         self.global_item.state = False
 
-        start_trojan()
+        # start_trojan()
         start_pac_server()
         self.pac_url = self.pac_url % APP_CONFIG["pac_port"]
-        pac_mode_on(self.pac_url)
+        # pac_mode_on(self.pac_url)
 
 
-    @rumps.clicked(u"❌关闭")
+    @rumps.clicked(u"✅启动")
     def onoff(self, sender):
         if not self.status_item:
-            self.status_item = self._menu[u"当前状态:启动"]
+            self.status_item = self._menu[u"当前状态:关闭"]
 
         self.status_item.title = u"当前状态:启动"
 
