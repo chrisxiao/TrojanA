@@ -1,2 +1,3 @@
 *.md linguist-language=Python
 *.sh linguist-language=Python
+*.txt linguist-language=Python
