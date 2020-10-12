@@ -1,4 +1,7 @@
 build
 dist
+download
 
 .vscode
+
+*.pyc

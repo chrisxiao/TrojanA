@@ -5,6 +5,9 @@ import sys
 import io
 from ConfigParser import ConfigParser
 import plistlib
+import urllib
+import json
+import commands
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -40,6 +43,7 @@ APP_MENU = [
     u"全局模式",
     None,
     u"⚙设置",
+    u"更新trojan core",
     None,
     u"退出",
 ]
@@ -267,6 +271,57 @@ def stop_pac_server():
     print os.system("launchctl unload " + plist_file)
 
 
+def get_cur_trojan_ver():
+    """
+    获取当前trojan版本
+    """
+    ver = commands.getoutput("./trojan/trojan --version").splitlines()[0].split()[-1]
+    return ver
+
+
+def get_latest_trojan():
+    """
+    获取最新trojan版本信息
+    """
+
+    r = urllib.urlopen("https://api.github.com/repos/trojan-gfw/trojan/releases/latest")
+    res_json = json.loads(r.read())
+
+    release_ver = res_json["name"].split()[-1]
+    download_url = [i["browser_download_url"] for i in res_json["assets"] if i["browser_download_url"].find("macos") > 0]
+
+    return release_ver, download_url
+
+
+def do_update_trojan():
+    """
+    检查并更新trojan版本
+    """
+    now_ver = get_cur_trojan_ver()
+    latest_info = get_latest_trojan()
+
+    if now_ver >= latest_info[0]:
+        return False
+
+    print "start downloading new"
+    url = latest_info[1][0]
+    target = "./download/" + os.path.basename(latest_info[1][0])
+    print target
+
+    os.system("curl -sL %s --output %s" % (url, target))
+    os.system("unzip -u %s -d ./download/tmp" % target)
+    os.system("rm -f ./trojan/trojan")
+    os.system("cp ./download/tmp/trojan/trojan ./trojan/trojan")
+    os.system("rm -rf ./download/tmp")
+    os.system("rm -f %s" % target)
+
+    print "update finished"
+
+    return True
+
+
+
+
 class AwesomeStatusBarApp(rumps.App):
 
     pac_item = None
@@ -351,6 +406,17 @@ class AwesomeStatusBarApp(rumps.App):
         pac_mode_off()
         # 打开全局模式
         global_mode_on("127.0.0.1", TROJAN_CONFIG["local_port"])
+
+
+    @rumps.clicked(u"更新trojan core")
+    def update_trojan_client(self, sender):
+        if do_update_trojan():
+            if hasattr(self.status_item, "title") and self.status_item.title == u"当前状态:开启":
+                stop_trojan()
+                start_trojan()
+            rumps.alert(u"更新成功!")
+        else:
+            rumps.alert(u"已是最新版本，无需更新！")
 
 
     @rumps.clicked(u"退出")
