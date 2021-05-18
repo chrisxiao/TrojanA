@@ -12,6 +12,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 import rumps
+from genpac import update_gfwlist
 
 CONFIG_TEMPLATE = '''\
 [Trojan]
@@ -44,6 +45,7 @@ APP_MENU = [
     None,
     u"⚙设置",
     u"更新trojan core",
+    u"从gfwlist更新PAC",
     None,
     u"退出",
 ]
@@ -414,6 +416,14 @@ class AwesomeStatusBarApp(rumps.App):
             if hasattr(self.status_item, "title") and self.status_item.title == u"当前状态:开启":
                 stop_trojan()
                 start_trojan()
+            rumps.alert(u"更新成功!")
+        else:
+            rumps.alert(u"已是最新版本，无需更新！")
+
+
+    @rumps.clicked(u"从gfwlist更新PAC")
+    def update_pac(self, sender):
+        if update_gfwlist(os.path.join(CONFIG_DIR, "pac", "gfwlist.js"), TROJAN_CONFIG["local_port"]):
             rumps.alert(u"更新成功!")
         else:
             rumps.alert(u"已是最新版本，无需更新！")
