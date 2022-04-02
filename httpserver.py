@@ -1,8 +1,13 @@
 # coding=utf-8
-
-import SimpleHTTPServer
-import SocketServer
+from __future__ import print_function
 import sys
+
+if sys.version_info.major == 2:
+    import SimpleHTTPServer as HTTPServer
+    import SocketServer
+else:
+    import http.server as HTTPServer
+    import socketserver as SocketServer
 
 
 def main():
@@ -12,11 +17,11 @@ def main():
 
     port = int(sys.argv[1])
 
-    handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+    handler = HTTPServer.SimpleHTTPRequestHandler
 
     httpd = SocketServer.TCPServer(("127.0.0.1", port), handler)
 
-    print "start http server at port", port
+    print("start http server at port", port)
 
     httpd.serve_forever()
 
