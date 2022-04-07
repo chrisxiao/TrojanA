@@ -20,8 +20,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements-build.txt
-    - name: Lint with flake8
+    - name: Build
       run: |
         rm -rf build
         rm -rf dist
         python setup.py py2app
+    - name: Create Zip Package
+        zip -r ./dist/TrojanA.app.zip ./dist/TrojanA.app
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: release zip file
+        path: ./dist/TrojanA.app.zip
