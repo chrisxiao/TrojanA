@@ -1,10 +1,23 @@
 # coding=utf-8
+from __future__ import print_function
 
-import urllib
+import sys
 import base64
-import urlparse
 import json
 import hashlib
+import io
+
+if sys.version_info.major == 2:
+    from urllib2 import urlopen
+    from urllib import unquote
+    from urlparse import urlparse
+else:
+    from urllib.request import urlopen
+    from urllib.parse import unquote
+    from urllib.parse import urlparse
+
+
+
 
 GFWLIST_HOSTS = (
     "https://bitbucket.org/gfwlist/gfwlist/raw/HEAD/gfwlist.txt",
@@ -53,16 +66,17 @@ def get_gfwlist_file(save_to):
     res = None
     for url in GFWLIST_HOSTS:
         try:
-            res = urllib.urlopen(url)
-        except IOError:
+            res = urlopen(url, timeout=10)
+        except Exception as e:
+            print(e)
             continue
         break
 
-    print "get content from: %s" % res.geturl()
-    print "http response status: %s" % res.getcode()
+    print("get content from: %s" % res.geturl())
+    print("http response status: %s" % res.getcode())
     res_data = res.read()
 
-    with open(save_to, "wb") as f:
+    with io.open(save_to, "wb") as f:
         f.write(res_data)
 
 
@@ -74,20 +88,20 @@ def update_gfwlist(target_file, proxy_port):
     get_gfwlist_file(download_file)
     try:
         last_md5 = None
-        last_md5 = open(download_file + ".md5").read().strip()
+        last_md5 = io.open(download_file + ".md5", encoding="utf-8").read().strip()
     except Exception as e:
-        print e
+        print(e)
         pass
-    new_md5 = hashlib.md5(open(download_file).read()).hexdigest()
+    new_md5 = hashlib.md5(io.open(download_file, encoding="utf-8").read().encode("utf-8")).hexdigest()
 
     if new_md5 == last_md5:
         return False
 
     pac_content = genpac(download_file, proxy_port)
-    with open(target_file, "wb") as f:
+    with io.open(target_file, "wb") as f:
         f.write(pac_content)
     
-    with open(download_file + ".md5", "wb") as f:
+    with io.open(download_file + ".md5", "wb") as f:
         f.write(new_md5)
     
     return True
@@ -97,14 +111,14 @@ def genpac(gfwlist_file, proxy_port):
     """
     gen pac file from gfwlist
     """
-    with open(gfwlist_file) as f:
+    with io.open(gfwlist_file, encoding="utf-8") as f:
         data = f.read()
     rules_content = base64.b64decode(data)
 
     domains_dict = {}
     for line in rules_content.splitlines():
         # line to ignore
-        line = urllib.unquote(line)
+        line = unquote(line)
         if line.startswith("!"):
             continue
         if line.startswith("["):
@@ -124,7 +138,7 @@ def genpac(gfwlist_file, proxy_port):
         
         # line startswith http:// or https://
         if line.startswith("https://") or line.startswith("http://"):
-            line = urlparse.urlparse(line).netloc
+            line = urlparse(line).netloc
         
         if line.find("/") >= 0:
             line = line.split("/")[0]
