@@ -1,4 +1,4 @@
 # the latest `rumps` is not in PyPI, get it from github
 rumps @ git+https://github.com/jaredks/rumps.git
-py2app==0.28
-setuptools==44.1.1
+py2app==0.21
+setuptools==39.0.1
