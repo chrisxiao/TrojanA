@@ -1,0 +1,37 @@
+name: Build MacOS Application
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-10.15
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 2.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "2.7"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements-build.txt
+    - name: Build
+      run: |
+        rm -rf build
+        rm -rf dist
+        python -c "import platform;print(platform.mac_ver())"
+        python -c "import sys;print(sys.version)"
+        python setup.py py2app
+    - name: Create Zip Package
+      run: |
+        zip -r ./dist/TrojanA.app.zip ./dist/TrojanA.app
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: TrojanA.app.zip
+        path: ./dist/TrojanA.app.zip
