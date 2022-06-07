@@ -1,4 +1,4 @@
-name: Build MacOS Application
+name: Build MacOS Application Python 2.7
 
 on:
   workflow_dispatch:
