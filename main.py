@@ -106,12 +106,16 @@ def gen_http_plist():
     home_dir = os.environ.get("HOME", "~")
     http_plist = "com.chrisxiao.trojana.http-server.plist"
 
+    sys_python_cmd = "python3"
+    if os.system("type {}".format(sys_python_cmd)) != 0:
+        sys_python_cmd = "python"
+
     data = {
         'RunAtLoad': True,
         'WorkingDirectory': os.path.join(CONFIG_DIR, "pac"),
         'StandardOutPath': os.path.join(home_dir, 'Library/Logs/trojana-http.log'),
         'Label': 'com.chrisxiao.trojana.http-server',
-        'ProgramArguments': [sys.executable, os.path.abspath('./httpserver.py'), APP_CONFIG.get("pac_port", "1082")],
+        'ProgramArguments': [sys_python_cmd, os.path.abspath('./httpserver.py'), APP_CONFIG.get("pac_port", "1082")],
         'KeepAlive': True,
         'StandardErrorPath': os.path.join(home_dir, 'Library/Logs/trojana-http.log')
     }
