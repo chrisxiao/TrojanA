@@ -38,6 +38,10 @@ jobs:
         name: TrojanA-app-macos-12
         path: ./dist/TrojanA-app-macos-12.zip
     - name: Upload Release File
-      run: |
-        echo ${{ github.event.release.id }}
+      if: ${{ github.event_name == 'release'}}
+      uses: skx/github-action-publish-binaries@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          args: './dist/TrojanA-*.zip'
 
