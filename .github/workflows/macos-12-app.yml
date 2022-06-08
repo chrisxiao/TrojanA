@@ -37,3 +37,7 @@ jobs:
       with:
         name: TrojanA-app-macos-12
         path: ./dist/TrojanA-app-macos-12.zip
+    - name: Upload Release File
+      run: |
+        echo ${{ github.event.release.id }}
+
