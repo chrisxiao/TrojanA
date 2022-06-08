@@ -2,6 +2,8 @@ name: Build MacOS Application Python 2.7
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
   contents: write

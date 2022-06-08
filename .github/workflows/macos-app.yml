@@ -2,6 +2,8 @@ name: Build MacOS Application
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
   contents: write
