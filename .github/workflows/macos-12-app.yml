@@ -3,7 +3,7 @@ name: Build MacOS 12 Application
 on:
   workflow_dispatch:
   release:
-    types: [created]
+    types: [published]
 
 permissions:
   contents: read
