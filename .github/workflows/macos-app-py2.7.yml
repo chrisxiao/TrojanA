@@ -33,7 +33,7 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: TrojanA.app.zip
+        name: TrojanA-app-macos-10.14
         path: ./dist/TrojanA-app-macos-10.14.zip
     - name: Upload Release File
       if: ${{ github.event_name == 'release'}}
