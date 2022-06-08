@@ -2,9 +2,11 @@ name: Build MacOS 11 Application
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -29,9 +31,17 @@ jobs:
         python setup.py py2app
     - name: Create Zip Package
       run: |
-        zip -r ./dist/TrojanA.app.zip ./dist/TrojanA.app
+        zip -r ./dist/TrojanA-app-macos-11.zip ./dist/TrojanA.app
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: TrojanA.app.zip
-        path: ./dist/TrojanA.app.zip
+        name: TrojanA-app-macos-11
+        path: ./dist/TrojanA-app-macos-11.zip
+    - name: Upload Release File
+      if: ${{ github.event_name == 'release'}}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_NAME: ${{ github.event.release.tag_name }}
+      run: |
+        gh release upload "$TAG_NAME" ./dist/TrojanA-app-macos-11.zip
+
