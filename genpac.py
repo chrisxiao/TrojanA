@@ -99,10 +99,10 @@ def update_gfwlist(target_file, proxy_port):
 
     pac_content = genpac(download_file, proxy_port)
     with io.open(target_file, "wb") as f:
-        f.write(pac_content)
+        f.write(pac_content.encode("utf-8"))
     
     with io.open(download_file + ".md5", "wb") as f:
-        f.write(new_md5)
+        f.write(new_md5.encode("utf-8"))
     
     return True
 
@@ -118,7 +118,7 @@ def genpac(gfwlist_file, proxy_port):
     domains_dict = {}
     for line in rules_content.splitlines():
         # line to ignore
-        line = unquote(line)
+        line = unquote(line.decode("utf-8"))
         if line.startswith("!"):
             continue
         if line.startswith("["):
