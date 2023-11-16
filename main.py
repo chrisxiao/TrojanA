@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
+import platform
 
 PY3 = True
 if sys.version_info.major == 2:
@@ -135,12 +136,17 @@ def gen_trojan_plist():
     home_dir = os.environ.get("HOME", "~")
     trojan_plist = "com.chrisxiao.trojana.trojan-client.plist"
 
+    # check if cpu is Apple Silicon
+    trojan_exe = "./trojan"
+    if platform.processor() == "arm":
+        trojan_exe = "./trojan.arm"
+
     data = {
         'RunAtLoad': True,
         'WorkingDirectory': os.path.abspath("./trojan"),
         'StandardOutPath': os.path.join(home_dir, 'Library/Logs/trojana-client.log'),
         'Label': 'com.chrisxiao.trojana.trojan-client',
-        'ProgramArguments': ['./trojan', '-c', os.path.join(CONFIG_DIR, 'config.json')],
+        'ProgramArguments': [trojan_exe, '-c', os.path.join(CONFIG_DIR, 'config.json')],
         'KeepAlive': True,
         'StandardErrorPath': os.path.join(home_dir, 'Library/Logs/trojana-client.log')
     }
@@ -459,6 +465,11 @@ class AwesomeStatusBarApp(rumps.App):
 
     @rumps.clicked("更新trojan core")
     def update_trojan_client(self, sender):
+
+        if platform.processor() == "arm":
+            rumps.alert("使用Apple芯片的电脑，暂不支持该功能！")
+            return
+
         result, message = do_update_trojan()
         if result:
             if hasattr(self.status_item, "title") and self.status_item.title == "当前状态:开启":
